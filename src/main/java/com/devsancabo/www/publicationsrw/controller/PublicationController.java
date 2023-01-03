@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -26,9 +27,19 @@ public class PublicationController {
     }
 
     @PostMapping("/publicacion/populator")
-    public ResponseEntity<Object> populate(){
-        publicationService.populateDB();
-        return ResponseEntity.ok().build();
+    public ResponseEntity<String> populate(@RequestParam(name = "intensity") Integer intensity){
+        return ResponseEntity.ok(publicationService.populateDB(intensity));
+    }
+
+    @DeleteMapping("/publicacion/populator")
+    public ResponseEntity<Object> stopPopulate(){
+        publicationService.stopPopulators();
+        return ResponseEntity.ok("Requested stopping of data Population");
+    }
+
+    @GetMapping("/publicacion/populator")
+    public ResponseEntity<Map<String, Object>> getPopulator(){
+        return ResponseEntity.ok(publicationService.gerPopulator());
     }
 
     @GetMapping("/publicacion")
