@@ -1,7 +1,6 @@
 package com.devsancabo.www.publicationsrw.populator;
 
 import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
-import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
 import com.devsancabo.www.publicationsrw.populator.inserter.DataInserter;
 
 import java.util.HashMap;
@@ -11,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public abstract class AbstractPopulator<T> implements Populator<T> {
+public abstract non-sealed class AbstractPopulator<T> implements Populator<T> {
 
     public Integer timeoutInMillis = 60000;
     private final Map<String, Thread> populatorMap = new HashMap<>();
@@ -27,6 +26,7 @@ public abstract class AbstractPopulator<T> implements Populator<T> {
 
 
     //TODO: I want to be able to modify the populator while it's running
+    //TODO: I want the populator to stop itself when it finishes
     @Override
     public GetPopulatorResponseDTO startPopulator(Integer intensity){
         if(!status.equals(Status.RUNNING)) {
@@ -69,7 +69,7 @@ public abstract class AbstractPopulator<T> implements Populator<T> {
         }
     }
 
-    public void setDataPErsister(final Consumer<T> dataPersister){
+    public void setDataPersister(final Consumer<T> dataPersister){
         this.dataPersister = dataPersister;
     }
 

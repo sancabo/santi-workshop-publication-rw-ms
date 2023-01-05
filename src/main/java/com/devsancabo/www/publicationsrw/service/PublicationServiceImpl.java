@@ -36,7 +36,7 @@ public class PublicationServiceImpl implements PublicationService {
         this.publicationRepository = publicationRepository;
         this.authorRepository = authorRepository;
         this.populator = populator;
-        this.populator.setDataPErsister(this::create);
+        this.populator.setDataPersister(this::create);
     }
 
     @Override
