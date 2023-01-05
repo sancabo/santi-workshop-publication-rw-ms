@@ -1,83 +1,54 @@
 package com.devsancabo.www.publicationsrw.populator;
 
-import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
+import com.devsancabo.www.publicationsrw.dto.AuthorCreateDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
+import com.devsancabo.www.publicationsrw.populator.inserter.DataInserter;
+import com.devsancabo.www.publicationsrw.populator.inserter.UserRatioDataInserter;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class PopulatorImpl implements Populator<PublicationCreateRequestDTO, UserRatioDataInserter>{
-    public static final int TIMEOUT_IN_MILLIS = 60000;
-    private final Map<String, Thread> populatorMap = new HashMap<>();
-    private final Integer amountToInsertPerThread;
-    private Integer currentIntensity;
-    private Supplier<PublicationCreateRequestDTO> dataProducer;
-    private Consumer<PublicationCreateRequestDTO> dataPersister;
-    private CountDownLatch latch;
-    private Status status;
-    public enum Status{UNINITIALIZED, RUNNING, FAULTED, STOPPED, STOPPED_WITH_ERRORS}
+@Component
+public class PublicationPopulator extends AbstractPopulator<PublicationCreateRequestDTO>{
+    @Value("${service.populator.insertions:10}")
+    private Integer amountPerInserter;
 
-    private PopulatorImpl(){
-        this.amountToInsertPerThread = 10;
-        this.currentIntensity = 1;
+    @Value("${service.populator.thread.timeout:1000}")
+    private Integer timeout;
+
+    @Value("${service.populator.inserter.user.ratio:100}")
+    private Integer userRatio;
+
+    @Autowired
+    public PublicationPopulator(){
+        super.dataProducer = () -> {
+            var publicationDto = new PublicationCreateRequestDTO();
+            var author = new AuthorCreateDTO();
+            author.setUsername(UUID.randomUUID().toString());
+            publicationDto.setAuthor(author);
+            publicationDto.setContent("");
+            return publicationDto;
+        };// ;};
+        super.status = Status.UNINITIALIZED;
+    }
+    @PostConstruct
+    private void init() {
+        super.amountToInsert = amountPerInserter;
+        super.timeoutInMillis = timeout;
     }
 
-    public PopulatorImpl(final Integer amountToInsertPerThread,
-                         final Supplier<PublicationCreateRequestDTO> dataProducer,
-                         final Consumer<PublicationCreateRequestDTO> dataPersister){
-        this.amountToInsertPerThread = amountToInsertPerThread;
-        this.dataProducer = dataProducer;
-        this.dataPersister = dataPersister;
-        this.status = Status.UNINITIALIZED;
-    }
 
     @Override
-    public GetPopulatorResponseDTO startPopulator(Integer intensity){
-        latch = new CountDownLatch(intensity);
-        this.currentIntensity = intensity;
-        for(int i = 1; i < intensity ; ++i) {
-            var dbInserter = new UserRatioDataInserter(this.amountToInsertPerThread, this.dataProducer,this.dataPersister, this.latch);
-            Thread thread = new Thread(dbInserter);
-            thread.setName("DbInserter-" + i);
-            thread.start();
-            populatorMap.put(thread.getName(),thread);
-            status = Status.RUNNING;
-        }
-        return this.gerPopulatorDTO();
+    public DataInserter<PublicationCreateRequestDTO> getInserter(final Integer amountPerInserter,
+                                                                 final Supplier<PublicationCreateRequestDTO> dataProducer,
+                                                                 final Consumer<PublicationCreateRequestDTO> dataPersister,
+                                                                 final CountDownLatch latch) {
+        return new UserRatioDataInserter(amountPerInserter, dataProducer,dataPersister, latch, userRatio);
     }
-
-    @Override
-    public void stopPopulator() {
-        populatorMap.forEach((k, v) -> v.interrupt());
-        boolean countedToZero = false;
-        try {
-            countedToZero = latch.await(TIMEOUT_IN_MILLIS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            latch = null;
-        }
-        populatorMap.clear();
-        if(countedToZero) {
-            status = Status.STOPPED;
-        } else {
-            status = Status.STOPPED_WITH_ERRORS;
-        }
-    }
-
-    @Override
-    public GetPopulatorResponseDTO gerPopulatorDTO() {
-        return GetPopulatorResponseDTO.builder()
-                .activeInserterCount(populatorMap.entrySet().stream().filter(e -> !e.getValue().isInterrupted()).count())
-                .inserterCount(populatorMap.size())
-                .insetionsPerThread(this.amountToInsertPerThread)
-                .status(this.status)
-                .intensity(this.currentIntensity)
-                .build();
-    }
-
-
 }

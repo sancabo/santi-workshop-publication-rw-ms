@@ -2,21 +2,17 @@ package com.devsancabo.www.publicationsrw.service;
 
 import com.devsancabo.www.LoremIpsum;
 import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
-import com.devsancabo.www.publicationsrw.populator.Populator;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateResponseDTO;
 import com.devsancabo.www.publicationsrw.entity.Author;
 import com.devsancabo.www.publicationsrw.entity.Publication;
-import com.devsancabo.www.publicationsrw.populator.UserRatioDataInserter;
+import com.devsancabo.www.publicationsrw.populator.Populator;
 import com.devsancabo.www.publicationsrw.repository.AuthorRepository;
 import com.devsancabo.www.publicationsrw.repository.PublicationRepository;
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -25,45 +21,33 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 
 @Service
 public class PublicationServiceImpl implements PublicationService {
     private final Logger logger = LoggerFactory.getLogger(PublicationServiceImpl.class);
     private final PublicationRepository publicationRepository;
     private final AuthorRepository authorRepository;
-    private final Populator<PublicationCreateRequestDTO, UserRatioDataInserter> populator;
-
-    @Value("${service.populator.user.ratio:10000}")
-    private Integer populatorUserRatio;
+    private final Populator<PublicationCreateRequestDTO> populator;
 
     @Autowired
-    public PublicationServiceImpl(final PublicationRepository publicationRepository, final AuthorRepository authorRepository){
+    public PublicationServiceImpl(final PublicationRepository publicationRepository,
+                                  final AuthorRepository authorRepository,
+                                  final Populator<PublicationCreateRequestDTO> populator){
         this.publicationRepository = publicationRepository;
         this.authorRepository = authorRepository;
-        var mapper = new ObjectMapper();
-        this.populator = new Populator<>(
-                populatorUserRatio,
-                () -> {
-                    var userName = UUID.randomUUID().toString();
-                    var text = "{\"content\": \"sarasa\",\"author\": {\"username\" : \""+ userName + "\"}}";
-                    try {
-                        return  mapper.readValue(text, PublicationCreateRequestDTO.class);
-                    } catch (JacksonException e){
-                        return null;
-                    }},
-                (dto) -> {var response = create(dto);});
+        this.populator = populator;
+        this.populator.setDataPErsister(this::create);
     }
 
     @Override
-    public Set<Publication> search(long userId, String date) {
+    public Set<Publication> search(String username, String date) {
         if(Objects.isNull(date)) {
-            return publicationRepository.findByAuthorId(userId);
+            return publicationRepository.findByAuthor_Username(username);
         }
         else {
             var datetime = LocalDateTime.parse(date);
-            return publicationRepository.findByAuthorIdAndDatetimeGreaterThan(
-                    userId, Timestamp.from(datetime.toInstant(ZoneOffset.of("-03:00"))));
+            return publicationRepository.findByAuthor_UsernameAndDatetimeGreaterThan(
+                    username, Timestamp.from(datetime.toInstant(ZoneOffset.of("-03:00"))));
         }
 
     }

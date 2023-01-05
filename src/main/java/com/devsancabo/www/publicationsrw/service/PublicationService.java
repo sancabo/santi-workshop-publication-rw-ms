@@ -9,7 +9,7 @@ import jakarta.transaction.Transactional;
 import java.util.Set;
 
 public interface PublicationService {
-    Set<Publication> search(long userId, String date);
+    Set<Publication> search(String userName , String date);
 
     @Transactional
     PublicationCreateResponseDTO create(PublicationCreateRequestDTO dto);

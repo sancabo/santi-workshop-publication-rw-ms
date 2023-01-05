@@ -12,9 +12,10 @@ import java.util.Set;
 @Repository
 public interface PublicationRepository extends JpaRepository<Publication, Long> {
 
-    @CacheEvict(value = "publications", key="#p?.author?.id")
+    @CacheEvict(value = "publications", key="#p?.author?.username")
     Publication save(Publication p);
-    Set<Publication> findByAuthorIdAndDatetimeGreaterThan(Long id, Timestamp timestamp);
-    @Cacheable(value = "publications", key="#id")
-    Set<Publication> findByAuthorId(Long id);
+    Set<Publication> findByAuthor_UsernameAndDatetimeGreaterThan(String username, Timestamp timestamp);
+    @Cacheable(value = "publications", key="#userName")
+    Set<Publication> findByAuthor_Username(String userName);
+
 }

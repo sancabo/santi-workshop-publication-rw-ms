@@ -1,13 +1,14 @@
-package com.devsancabo.www.publicationsrw.populator;
+package com.devsancabo.www.publicationsrw.populator.inserter;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public abstract class DataInserter<T> implements Runnable{
     private final Integer dataAmount;
-    private final Supplier<T> dataProducer;
+    protected final Supplier<T> dataProducer;
     private final Consumer<T> dataPersister;
     private final CountDownLatch latch;
     private boolean error = false;
@@ -37,7 +38,7 @@ public abstract class DataInserter<T> implements Runnable{
                 latch.countDown();
                 finished = true;
             }
-            T dto = dataProducer.get();
+            var dto = handleDataForDataSaver();
             error = Objects.isNull(dto);
             if (!error) dataPersister.accept(dto);
             return error;
@@ -46,11 +47,14 @@ public abstract class DataInserter<T> implements Runnable{
 
     //With this we add additional logic to how data is saved
     public abstract Consumer<Supplier<Boolean>> prepareDataForDataSaver();
+    public abstract T handleDataForDataSaver();
 
     @Override
     public void run() {
             for (int i = 0; i < dataAmount && !error && !finished; i++) {
                 prepareDataForDataSaver().accept(dataSaver());
             }
+        latch.countDown();
+        finished = true;
     }
 }
