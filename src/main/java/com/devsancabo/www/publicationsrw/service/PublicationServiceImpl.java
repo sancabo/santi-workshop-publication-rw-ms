@@ -1,11 +1,13 @@
 package com.devsancabo.www.publicationsrw.service;
 
 import com.devsancabo.www.LoremIpsum;
-import com.devsancabo.www.publicationsrw.Populator;
+import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
+import com.devsancabo.www.publicationsrw.populator.Populator;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateResponseDTO;
 import com.devsancabo.www.publicationsrw.entity.Author;
 import com.devsancabo.www.publicationsrw.entity.Publication;
+import com.devsancabo.www.publicationsrw.populator.UserRatioDataInserter;
 import com.devsancabo.www.publicationsrw.repository.AuthorRepository;
 import com.devsancabo.www.publicationsrw.repository.PublicationRepository;
 import com.fasterxml.jackson.core.JacksonException;
@@ -21,7 +23,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public class PublicationServiceImpl implements PublicationService {
     private final Logger logger = LoggerFactory.getLogger(PublicationServiceImpl.class);
     private final PublicationRepository publicationRepository;
     private final AuthorRepository authorRepository;
-    private final Populator<PublicationCreateRequestDTO> populator;
+    private final Populator<PublicationCreateRequestDTO, UserRatioDataInserter> populator;
 
     @Value("${service.populator.user.ratio:10000}")
     private Integer populatorUserRatio;
@@ -107,18 +108,18 @@ public class PublicationServiceImpl implements PublicationService {
     }
 
     @Override
-    public String populateDB(Integer intensity){
-        return populator.populateDB(intensity);
+    public GetPopulatorResponseDTO startPopulator(Integer intensity){
+        return populator.startPopulator(intensity);
     }
 
     @Override
     public void stopPopulators() {
-        populator.stopPopulators();
+        populator.stopPopulator();
     }
 
     @Override
-    public Map<String, Object> gerPopulator() {
-        return populator.gerPopulator();
+    public GetPopulatorResponseDTO gerPopulator() {
+        return populator.gerPopulatorDTO();
     }
 
 }
