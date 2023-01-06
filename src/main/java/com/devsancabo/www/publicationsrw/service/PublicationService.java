@@ -14,7 +14,7 @@ public interface PublicationService {
     @Transactional
     PublicationCreateResponseDTO create(PublicationCreateRequestDTO dto);
 
-    GetPopulatorResponseDTO startPopulator(Integer intensity);
+    GetPopulatorResponseDTO startPopulator(Integer intensity, Boolean runForever);
 
     void stopPopulators();
 

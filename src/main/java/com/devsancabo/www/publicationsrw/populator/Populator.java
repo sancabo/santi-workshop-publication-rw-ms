@@ -2,11 +2,11 @@ package com.devsancabo.www.publicationsrw.populator;
 
 import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
 
-import java.util.function.Consumer;
-
 public sealed interface Populator<T> permits AbstractPopulator{
-    GetPopulatorResponseDTO startPopulator(Integer intensity);
+    GetPopulatorResponseDTO startPopulator(Integer intensity, Boolean runForever);
     void stopPopulator();
-    GetPopulatorResponseDTO gerPopulatorDTO();
-    void setDataPersister(final Consumer<T> dataPersister);
+    GetPopulatorResponseDTO getPopulatorDTO();
+
+    GetPopulatorResponseDTO resetPopulator();
+
 }

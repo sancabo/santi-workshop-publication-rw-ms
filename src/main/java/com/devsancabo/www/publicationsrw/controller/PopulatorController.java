@@ -17,8 +17,9 @@ public class PopulatorController {
     }
 
     @PostMapping("/populator")
-    public ResponseEntity<GetPopulatorResponseDTO> populate(@RequestParam(name = "intensity") Integer intensity){
-        return ResponseEntity.ok(publicationService.startPopulator(intensity));
+    public ResponseEntity<GetPopulatorResponseDTO> populate(@RequestParam(name = "intensity") Integer intensity,
+                                                            @RequestParam(name = "runForever") Boolean runForever){
+        return ResponseEntity.ok(publicationService.startPopulator(intensity, runForever));
     }
 
     @DeleteMapping("/populator")

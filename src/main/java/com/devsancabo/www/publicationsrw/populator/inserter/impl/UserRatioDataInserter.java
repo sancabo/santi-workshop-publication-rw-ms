@@ -1,7 +1,10 @@
-package com.devsancabo.www.publicationsrw.populator.inserter;
+package com.devsancabo.www.publicationsrw.populator.inserter.impl;
 
+import com.devsancabo.www.publicationsrw.dto.InserterDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
+import com.devsancabo.www.publicationsrw.populator.inserter.DataInserter;
 
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -15,8 +18,9 @@ public class UserRatioDataInserter extends DataInserter<PublicationCreateRequest
                                  final Supplier<PublicationCreateRequestDTO> producer,
                                  final Consumer<PublicationCreateRequestDTO> create,
                                  final CountDownLatch latch,
-                                 final Integer userRatio) {
-        super(dataPerThread, producer, create, latch);
+                                 final Integer userRatio,
+                                 final Boolean runForever) {
+        super(dataPerThread, producer, create, latch, runForever);
         this.userRatio = userRatio;
     }
 
@@ -33,5 +37,16 @@ public class UserRatioDataInserter extends DataInserter<PublicationCreateRequest
     @Override
     public PublicationCreateRequestDTO handleDataForDataSaver() {
         return author;
+    }
+
+    @Override
+    public InserterDTO getDTORepresentation() {
+        var dto = new InserterDTO();
+        dto.setProperties(new HashMap<>());
+        dto.getProperties().put("userRatio", userRatio.toString());
+        dto.setInserterClassName(this.getClass().getName());
+        dto.setDescription(
+                "Inserts Publications. userRatio tells how many times to reuse one user before creating a new one.");
+        return dto;
     }
 }

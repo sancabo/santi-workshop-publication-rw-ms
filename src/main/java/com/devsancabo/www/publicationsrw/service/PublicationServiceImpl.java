@@ -7,12 +7,15 @@ import com.devsancabo.www.publicationsrw.dto.PublicationCreateResponseDTO;
 import com.devsancabo.www.publicationsrw.entity.Author;
 import com.devsancabo.www.publicationsrw.entity.Publication;
 import com.devsancabo.www.publicationsrw.populator.Populator;
+import com.devsancabo.www.publicationsrw.populator.impl.PublicationPopulator;
 import com.devsancabo.www.publicationsrw.repository.AuthorRepository;
 import com.devsancabo.www.publicationsrw.repository.PublicationRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -27,16 +30,29 @@ public class PublicationServiceImpl implements PublicationService {
     private final Logger logger = LoggerFactory.getLogger(PublicationServiceImpl.class);
     private final PublicationRepository publicationRepository;
     private final AuthorRepository authorRepository;
-    private final Populator<PublicationCreateRequestDTO> populator;
+    private  Populator<PublicationCreateRequestDTO> populator;
+
+    @Value("${service.populator.insertions:10}")
+    private Integer amountPerInserter;
+
+    @Value("${service.populator.thread.timeout:1000}")
+    private Integer timeout;
+
+    @Value("${service.populator.inserter.user.ratio:100}")
+    private Integer userRatio;
+
 
     @Autowired
     public PublicationServiceImpl(final PublicationRepository publicationRepository,
-                                  final AuthorRepository authorRepository,
-                                  final Populator<PublicationCreateRequestDTO> populator){
+                                  final AuthorRepository authorRepository){
         this.publicationRepository = publicationRepository;
         this.authorRepository = authorRepository;
-        this.populator = populator;
-        this.populator.setDataPersister(this::create);
+    }
+
+    @PostConstruct
+    private void initPopulator(){
+        this.populator = new PublicationPopulator(this::create,
+                this.amountPerInserter, this.timeout, this.userRatio);
     }
 
     @Override
@@ -60,6 +76,7 @@ public class PublicationServiceImpl implements PublicationService {
         if(detachedAuthors.isEmpty()){
             logger.info("Creating new user");
             var author = buildAuthor(dto);
+            //I want to ensure the author is found when I next call findByUsername.
             detachedAuthor = authorRepository.saveAndFlush(author);
         } else {
             logger.info("Using existing User");
@@ -92,8 +109,9 @@ public class PublicationServiceImpl implements PublicationService {
     }
 
     @Override
-    public GetPopulatorResponseDTO startPopulator(Integer intensity){
-        return populator.startPopulator(intensity);
+    public GetPopulatorResponseDTO startPopulator(Integer intensity, Boolean runForever){
+
+        return populator.startPopulator(intensity, runForever);
     }
 
     @Override
@@ -103,7 +121,7 @@ public class PublicationServiceImpl implements PublicationService {
 
     @Override
     public GetPopulatorResponseDTO gerPopulator() {
-        return populator.gerPopulatorDTO();
+        return populator.getPopulatorDTO();
     }
 
 }
