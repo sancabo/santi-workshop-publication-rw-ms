@@ -1,9 +1,7 @@
 package com.devsancabo.www.publicationsrw.populator;
 
 import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
-import com.devsancabo.www.publicationsrw.populator.impl.PublicationPopulator;
-import com.devsancabo.www.publicationsrw.populator.inserter.DataInserter;
-import jakarta.annotation.PostConstruct;
+import com.devsancabo.www.publicationsrw.populator.inserter.AbstractDataInserter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,15 +14,15 @@ import static com.devsancabo.www.publicationsrw.populator.AbstractPopulator.Stat
 
 public abstract non-sealed class AbstractPopulator<T> implements Populator<T> {
 
-    private Integer timeoutInMillis;
+    private final Integer timeoutInMillis;
     private final Map<String, Thread> populatorMap = new HashMap<>();
-    private Integer amountToInsert;
+    private final Integer amountToInsert;
     private Integer currentIntensity;
     protected Supplier<T> dataProducer;
     protected Consumer<T> dataPersister;
     protected CountDownLatch latch;
-    protected PublicationPopulator.Status status;
-    private DataInserter<T> currentInserter;
+    protected AbstractPopulator.Status status;
+    private AbstractDataInserter<T> currentInserter;
     private Boolean runForever = true;
 
     public enum Status{UNINITIALIZED, RUNNING, FAULTED, STOPPING, STOPPED, STOPPED_WITH_ERRORS}
@@ -46,11 +44,11 @@ public abstract non-sealed class AbstractPopulator<T> implements Populator<T> {
     }
 
 
-    public abstract DataInserter<T> getInserter(final Integer amountToInsert,
-                                                final Supplier<T> dataProducer,
-                                                final Consumer<T> dataPersister,
-                                                final CountDownLatch latch,
-                                                final Boolean runForever);
+    public abstract AbstractDataInserter<T> getInserter(final Integer amountToInsert,
+                                                        final Supplier<T> dataProducer,
+                                                        final Consumer<T> dataPersister,
+                                                        final CountDownLatch latch,
+                                                        final Boolean runForever);
     @Override
     public GetPopulatorResponseDTO startPopulator(final Integer intensity, Boolean runForeverParam){
         if(status.equals(FAULTED)) {
@@ -87,6 +85,7 @@ public abstract non-sealed class AbstractPopulator<T> implements Populator<T> {
                     e.printStackTrace();
                     latch = null;
                     status = FAULTED;
+                    Thread.currentThread().interrupt();
                 }
                 populatorMap.clear();
                 if (countedToZero) {

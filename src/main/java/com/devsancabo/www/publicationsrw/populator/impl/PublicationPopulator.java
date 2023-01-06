@@ -3,10 +3,8 @@ package com.devsancabo.www.publicationsrw.populator.impl;
 import com.devsancabo.www.publicationsrw.dto.AuthorCreateDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
 import com.devsancabo.www.publicationsrw.populator.AbstractPopulator;
-import com.devsancabo.www.publicationsrw.populator.inserter.DataInserter;
+import com.devsancabo.www.publicationsrw.populator.inserter.AbstractDataInserter;
 import com.devsancabo.www.publicationsrw.populator.inserter.impl.UserRatioDataInserter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -33,11 +31,11 @@ public class PublicationPopulator extends AbstractPopulator<PublicationCreateReq
     }
 
     @Override
-    public DataInserter<PublicationCreateRequestDTO> getInserter(final Integer amountPerInserter,
-                                                                 final Supplier<PublicationCreateRequestDTO> dataProducer,
-                                                                 final Consumer<PublicationCreateRequestDTO> dataPersister,
-                                                                 final CountDownLatch latch,
-                                                                 final Boolean runForever) {
+    public AbstractDataInserter<PublicationCreateRequestDTO> getInserter(final Integer amountPerInserter,
+                                                                         final Supplier<PublicationCreateRequestDTO> dataProducer,
+                                                                         final Consumer<PublicationCreateRequestDTO> dataPersister,
+                                                                         final CountDownLatch latch,
+                                                                         final Boolean runForever) {
         return new UserRatioDataInserter(amountPerInserter, dataProducer,dataPersister, latch, this.userRatio, runForever);
     }
 

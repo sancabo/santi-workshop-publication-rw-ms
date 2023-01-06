@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  * A class that encapsulates the process of batch saving data to some destination.
  * @param <T> The type of data that's going to serve as input for the process.
  */
-public abstract class DataInserter<T> implements Runnable{
+public abstract class AbstractDataInserter<T> implements Runnable{
     private final Integer dataAmount;
     protected final Supplier<T> dataProducer;
     private final Consumer<T> dataPersister;
@@ -28,11 +28,11 @@ public abstract class DataInserter<T> implements Runnable{
      * @param latch a CountDownLatch that the inserter must call when it finishes or is interrupted
      * @param runForever Whether this inserter should execute indefinitely
      */
-    protected DataInserter(final Integer dataAmount,
-                           final Supplier<T> dataProducer,
-                           final Consumer<T> dataPersister,
-                           final CountDownLatch latch,
-                           final Boolean runForever) {
+    protected AbstractDataInserter(final Integer dataAmount,
+                                   final Supplier<T> dataProducer,
+                                   final Consumer<T> dataPersister,
+                                   final CountDownLatch latch,
+                                   final Boolean runForever) {
 
         this.dataProducer = dataProducer;
         this.dataPersister = dataPersister;
@@ -41,7 +41,7 @@ public abstract class DataInserter<T> implements Runnable{
         this.dataAmount = this.runForever ? 1 : dataAmount;
     }
 
-    private DataInserter() {
+    private AbstractDataInserter() {
         this.dataAmount = 1;
         this.dataProducer = null;
         this.dataPersister = t -> {};

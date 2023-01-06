@@ -2,7 +2,7 @@ package com.devsancabo.www.publicationsrw.populator.impl;
 
 import com.devsancabo.www.LoremIpsum;
 import com.devsancabo.www.publicationsrw.populator.AbstractPopulator;
-import com.devsancabo.www.publicationsrw.populator.inserter.DataInserter;
+import com.devsancabo.www.publicationsrw.populator.inserter.AbstractDataInserter;
 import com.devsancabo.www.publicationsrw.populator.inserter.impl.OtherInserter;
 import org.slf4j.LoggerFactory;
 
@@ -23,11 +23,11 @@ public class OtherPopulator extends AbstractPopulator<String> {
 
 
     @Override
-    public DataInserter<String> getInserter(Integer amountToInsert,
-                                            Supplier<String> dataProducer,
-                                            Consumer<String> dataPersister,
-                                            CountDownLatch latch,
-                                            Boolean runForever) {
+    public AbstractDataInserter<String> getInserter(Integer amountToInsert,
+                                                    Supplier<String> dataProducer,
+                                                    Consumer<String> dataPersister,
+                                                    CountDownLatch latch,
+                                                    Boolean runForever) {
         return new OtherInserter(amountToInsert, dataProducer, dataPersister, latch, runForever);
     }
 

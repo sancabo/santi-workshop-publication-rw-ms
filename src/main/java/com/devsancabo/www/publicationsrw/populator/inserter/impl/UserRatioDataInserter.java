@@ -2,14 +2,14 @@ package com.devsancabo.www.publicationsrw.populator.inserter.impl;
 
 import com.devsancabo.www.publicationsrw.dto.InserterDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
-import com.devsancabo.www.publicationsrw.populator.inserter.DataInserter;
+import com.devsancabo.www.publicationsrw.populator.inserter.AbstractDataInserter;
 
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class UserRatioDataInserter extends DataInserter<PublicationCreateRequestDTO> {
+public class UserRatioDataInserter extends AbstractDataInserter<PublicationCreateRequestDTO> {
     private final Integer userRatio;
 
     private PublicationCreateRequestDTO author = super.dataProducer.get();
@@ -44,7 +44,7 @@ public class UserRatioDataInserter extends DataInserter<PublicationCreateRequest
         var dto = new InserterDTO();
         dto.setProperties(new HashMap<>());
         dto.getProperties().put("userRatio", userRatio.toString());
-        dto.setInserterClassName(this.getClass().getName());
+        dto.setInserterClassName(this.getClass().getSimpleName());
         dto.setDescription(
                 "Inserts Publications. userRatio tells how many times to reuse one user before creating a new one.");
         return dto;

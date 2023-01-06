@@ -1,13 +1,13 @@
 package com.devsancabo.www.publicationsrw.populator.inserter.impl;
 
 import com.devsancabo.www.publicationsrw.dto.InserterDTO;
-import com.devsancabo.www.publicationsrw.populator.inserter.DataInserter;
+import com.devsancabo.www.publicationsrw.populator.inserter.AbstractDataInserter;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class OtherInserter extends DataInserter<String> {
+public class OtherInserter extends AbstractDataInserter<String> {
     /**
      * Represents one process that takes an object T from a producer, and saves it in an arbitrary destination.
      *
