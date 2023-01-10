@@ -1,16 +1,13 @@
 package com.devsancabo.www.publicationsrw.service;
 
 import com.devsancabo.www.LoremIpsum;
-import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateResponseDTO;
 import com.devsancabo.www.publicationsrw.entity.Author;
 import com.devsancabo.www.publicationsrw.entity.Publication;
-import com.devsancabo.www.publicationsrw.populator.Populator;
-import com.devsancabo.www.publicationsrw.populator.impl.PublicationPopulator;
+import com.devsancabo.www.publicationsrw.event.producer.PublicationProducer;
 import com.devsancabo.www.publicationsrw.repository.AuthorRepository;
 import com.devsancabo.www.publicationsrw.repository.PublicationRepository;
-import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,17 +17,13 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Objects;
-import java.util.Set;
 
 @Service
 public class PublicationServiceImpl implements PublicationService {
     private final Logger logger = LoggerFactory.getLogger(PublicationServiceImpl.class);
     private final PublicationRepository publicationRepository;
     private final AuthorRepository authorRepository;
-    private  Populator<PublicationCreateRequestDTO> populator;
+    private final PublicationProducer publicationProducer;
 
     @Value("${service.populator.insertions:10}")
     private Integer amountPerInserter;
@@ -44,29 +37,13 @@ public class PublicationServiceImpl implements PublicationService {
 
     @Autowired
     public PublicationServiceImpl(final PublicationRepository publicationRepository,
-                                  final AuthorRepository authorRepository){
+                                  final AuthorRepository authorRepository,
+                                  final PublicationProducer publicationProducer){
         this.publicationRepository = publicationRepository;
         this.authorRepository = authorRepository;
+        this.publicationProducer = publicationProducer;
     }
 
-    @PostConstruct
-    private void initPopulator(){
-        this.populator = new PublicationPopulator(this::create,
-                this.amountPerInserter, this.timeout, this.userRatio);
-    }
-
-    @Override
-    public Set<Publication> search(String username, String date) {
-        if(Objects.isNull(date)) {
-            return publicationRepository.findByAuthor_Username(username);
-        }
-        else {
-            var datetime = LocalDateTime.parse(date);
-            return publicationRepository.findByAuthor_UsernameAndDatetimeGreaterThan(
-                    username, Timestamp.from(datetime.toInstant(ZoneOffset.of("-03:00"))));
-        }
-
-    }
 
     @Override
     @Transactional
@@ -84,11 +61,13 @@ public class PublicationServiceImpl implements PublicationService {
         }
         var publication = buildPublication(detachedAuthor);
         var createdPublication = publicationRepository.save(publication);
-        return PublicationCreateResponseDTO.builder()
+        var resultDto = PublicationCreateResponseDTO.builder()
                 .content(createdPublication.getContent())
                 .datetime(createdPublication.getDatetime().toString())
                 .id(createdPublication.getId())
                 .author(dto.getAuthor()).build();
+        publicationProducer.send(resultDto);
+        return resultDto;
     }
 
     private Author buildAuthor(PublicationCreateRequestDTO dto) {
@@ -106,22 +85,6 @@ public class PublicationServiceImpl implements PublicationService {
         publication.setAuthor(detachedAuthor);
         publication.setDatetime(Timestamp.from(Instant.now()));
         return publication;
-    }
-
-    @Override
-    public GetPopulatorResponseDTO startPopulator(Integer intensity, Boolean runForever){
-
-        return populator.startPopulator(intensity, runForever);
-    }
-
-    @Override
-    public void stopPopulators() {
-        populator.stopPopulator();
-    }
-
-    @Override
-    public GetPopulatorResponseDTO gerPopulator() {
-        return populator.getPopulatorDTO();
     }
 
 }
