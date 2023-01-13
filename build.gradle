@@ -25,8 +25,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	implementation 'com.devsancabo.www:lorem-ipsum-sentence-generator:1.0.0-SNAPSHOT'
 	implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Final'
+	implementation 'com.devsancabo.www:LoremIpsum:1.0'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
