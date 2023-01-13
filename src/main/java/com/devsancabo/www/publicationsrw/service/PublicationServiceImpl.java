@@ -16,14 +16,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @Service
 public class PublicationServiceImpl implements PublicationService {
@@ -56,14 +57,15 @@ public class PublicationServiceImpl implements PublicationService {
     }
 
     @Override
-    public Set<Publication> search(String username, String date) {
+    public List<Publication> search(String username, String date, Integer pageNumber, Integer pageSize) {
         if(Objects.isNull(date)) {
-            return publicationRepository.findByAuthor_Username(username);
+            return publicationRepository.findByAuthor_Username(username, PageRequest.of(pageNumber, pageSize));
         }
         else {
             var datetime = LocalDateTime.parse(date);
             return publicationRepository.findByAuthor_UsernameAndDatetimeGreaterThan(
-                    username, Timestamp.from(datetime.toInstant(ZoneOffset.of("-03:00"))));
+                    username, Timestamp.from(datetime.toInstant(ZoneOffset.of("-03:00"))),
+                    PageRequest.of(pageNumber, pageSize));
         }
 
     }
@@ -71,7 +73,7 @@ public class PublicationServiceImpl implements PublicationService {
     @Override
     @Transactional
     public PublicationCreateResponseDTO create(PublicationCreateRequestDTO dto) {
-        var detachedAuthors = authorRepository.findByUsername(dto.getAuthor().getUsername());
+        var detachedAuthors = authorRepository.findByUsername(dto.author().username());
         Author detachedAuthor;
         if(detachedAuthors.isEmpty()){
             logger.info("Creating new user");
@@ -88,12 +90,12 @@ public class PublicationServiceImpl implements PublicationService {
                 .content(createdPublication.getContent())
                 .datetime(createdPublication.getDatetime().toString())
                 .id(createdPublication.getId())
-                .author(dto.getAuthor()).build();
+                .author(dto.author()).build();
     }
 
     private Author buildAuthor(PublicationCreateRequestDTO dto) {
         var author = new Author();
-        String username = dto.getAuthor().getUsername();
+        String username = dto.author().username();
         author.setEmail(username + "@gmail.com");
         author.setPassword("password");
         author.setUsername(username);

@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class UserRatioDataInserter extends AbstractDataInserter<PublicationCreateRequestDTO> {
+    public static final String DESCRIPTION = "Inserts Publications. userRatio tells how many times to reuse one user before creating a new one.";
     private final Integer userRatio;
 
     private PublicationCreateRequestDTO author = super.dataProducer.get();
@@ -41,12 +42,8 @@ public class UserRatioDataInserter extends AbstractDataInserter<PublicationCreat
 
     @Override
     public InserterDTO getDTORepresentation() {
-        var dto = new InserterDTO();
-        dto.setProperties(new HashMap<>());
-        dto.getProperties().put("userRatio", userRatio.toString());
-        dto.setInserterClassName(this.getClass().getSimpleName());
-        dto.setDescription(
-                "Inserts Publications. userRatio tells how many times to reuse one user before creating a new one.");
-        return dto;
+        var propertiesMap = new HashMap<String, String>();
+        propertiesMap.put("userRatio", userRatio.toString());
+        return new InserterDTO(this.getClass().getSimpleName(), propertiesMap, DESCRIPTION);
     }
 }

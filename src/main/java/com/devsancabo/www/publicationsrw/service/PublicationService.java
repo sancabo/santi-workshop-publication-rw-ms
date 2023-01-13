@@ -6,10 +6,10 @@ import com.devsancabo.www.publicationsrw.entity.Publication;
 import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
 import jakarta.transaction.Transactional;
 
-import java.util.Set;
+import java.util.List;
 
 public interface PublicationService {
-    Set<Publication> search(String userName , String date);
+    List<Publication> search(String userName , String date, Integer pageNumber, Integer pageSize);
 
     @Transactional
     PublicationCreateResponseDTO create(PublicationCreateRequestDTO dto);

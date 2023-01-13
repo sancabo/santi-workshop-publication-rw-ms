@@ -20,12 +20,9 @@ public class PublicationPopulator extends AbstractPopulator<PublicationCreateReq
                                 Integer timeout,
                                 Integer userRatio){
         super(() -> {
-            var publicationDto = new PublicationCreateRequestDTO();
-            var author = new AuthorCreateDTO();
-            author.setUsername(UUID.randomUUID().toString());
-            publicationDto.setAuthor(author);
-            publicationDto.setContent("");
-            return publicationDto;
+
+            var author = new AuthorCreateDTO(UUID.randomUUID().toString());
+            return new PublicationCreateRequestDTO("",author);
         },consumer, amountToInsert, timeout);
         this.userRatio = userRatio;
     }
