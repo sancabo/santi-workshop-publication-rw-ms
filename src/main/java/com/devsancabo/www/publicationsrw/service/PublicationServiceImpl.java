@@ -1,21 +1,16 @@
 package com.devsancabo.www.publicationsrw.service;
 
 import com.devsancabo.www.LoremIpsum;
-import com.devsancabo.www.publicationsrw.dto.GetPopulatorResponseDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateRequestDTO;
 import com.devsancabo.www.publicationsrw.dto.PublicationCreateResponseDTO;
 import com.devsancabo.www.publicationsrw.entity.Author;
 import com.devsancabo.www.publicationsrw.entity.Publication;
-import com.devsancabo.www.publicationsrw.populator.Populator;
-import com.devsancabo.www.publicationsrw.populator.impl.PublicationPopulator;
 import com.devsancabo.www.publicationsrw.repository.AuthorRepository;
 import com.devsancabo.www.publicationsrw.repository.PublicationRepository;
-import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -31,16 +26,6 @@ public class PublicationServiceImpl implements PublicationService {
     private final Logger logger = LoggerFactory.getLogger(PublicationServiceImpl.class);
     private final PublicationRepository publicationRepository;
     private final AuthorRepository authorRepository;
-    private  Populator<PublicationCreateRequestDTO> populator;
-
-    @Value("${service.populator.insertions:10}")
-    private Integer amountPerInserter;
-
-    @Value("${service.populator.thread.timeout:1000}")
-    private Integer timeout;
-
-    @Value("${service.populator.inserter.user.ratio:100}")
-    private Integer userRatio;
 
 
     @Autowired
@@ -50,11 +35,6 @@ public class PublicationServiceImpl implements PublicationService {
         this.authorRepository = authorRepository;
     }
 
-    @PostConstruct
-    private void initPopulator(){
-        this.populator = new PublicationPopulator(this::create,
-                this.amountPerInserter, this.timeout, this.userRatio);
-    }
 
     @Override
     public List<Publication> search(String username, String date, Integer pageNumber, Integer pageSize) {
@@ -109,21 +89,4 @@ public class PublicationServiceImpl implements PublicationService {
         publication.setDatetime(Timestamp.from(Instant.now()));
         return publication;
     }
-
-    @Override
-    public GetPopulatorResponseDTO startPopulator(Integer intensity, Boolean runForever){
-
-        return populator.startPopulator(intensity, runForever);
-    }
-
-    @Override
-    public void stopPopulators() {
-        populator.stopPopulator();
-    }
-
-    @Override
-    public GetPopulatorResponseDTO gerPopulator() {
-        return populator.getPopulatorDTO();
-    }
-
 }
